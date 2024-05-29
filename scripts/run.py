@@ -231,7 +231,13 @@ if __name__ == "__main__":
 
 		testbed.shall_train = False
 		testbed.load_training_data(args.test_transforms)
-
+		
+		gt_color_path = os.path.dirname(args.save_snapshot).join("gt")
+		os.makedirs(gt_color_path, exist_ok=True)
+		renders_color_path = os.path.dirname(args.save_snapshot).join("renders")
+		os.makedirs(renders_color_path, exist_ok=True)
+		diff_color_path = os.path.dirname(args.save_snapshot).join("diff")
+		os.makedirs(diff_color_path, exist_ok=True)
 		with tqdm(range(testbed.nerf.training.dataset.n_images), unit="images", desc=f"Rendering test frame") as t:
 			for i in t:
 				resolution = testbed.nerf.training.dataset.metadata[i].resolution
@@ -242,12 +248,12 @@ if __name__ == "__main__":
 				image = testbed.render(resolution[0], resolution[1], spp, True)
 
 				if i == 0:
-					write_image(f"ref.png", ref_image)
-					write_image(f"out.png", image)
+					write_image(f"{gt_color_path}/{i}.png", ref_image)
+					write_image(f"{renders_color_path}/{i}.png", image)
 
 					diffimg = np.absolute(image - ref_image)
 					diffimg[...,3:4] = 1.0
-					write_image("diff.png", diffimg)
+					write_image(f"{diff_color_path}/{i}.png", diffimg)
 
 				A = np.clip(linear_to_srgb(image[...,:3]), 0.0, 1.0)
 				R = np.clip(linear_to_srgb(ref_image[...,:3]), 0.0, 1.0)
